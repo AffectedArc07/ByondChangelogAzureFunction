@@ -31,14 +31,14 @@ After:
 ```
 
 This will make the function execute on startup, meaning you dont have to reconfigure the cron expression.
-The configuration will automatically be created inside a `bv_data` directory.
+The configuration will automatically be created inside a `bcaf_data` directory.
 
 The project code style is not C# norms, its Java styling. If this offends you please acquire a box of tissues.
 
 ## Deploying
 
 This can be deployed on any Azure functions plan on both Windows and Linux, however you need to add an Azure files
-share mapped to `bv_data` in order to preserve data and have a config.
+share mapped to `bcaf_data` in order to preserve data and have a config.
 
 ## License
 

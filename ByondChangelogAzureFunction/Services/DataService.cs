@@ -11,23 +11,42 @@ namespace ByondChangelogAzureFunction.Services
         /// <summary>
         /// The data dir. Used by <see cref="DatastoreFile"/> and <see cref="HooksFile"/>. Do not ever change.
         /// </summary>
-        private const string DataDir = "bv_data";
+        private readonly string DataDir;
 
         /// <summary>
         /// Used to store the local cache of the latest BYOND version. Do not ever change.
         /// </summary>
-        private const string DatastoreFile = $"{DataDir}/versions.json";
+        private readonly string DatastoreFile;
 
         /// <summary>
         /// Used to store the list of webhooks to send updates to. Do not ever change.
         /// </summary>
-        private const string HooksFile = $"{DataDir}/hooks.toml";
+        private readonly string HooksFile;
 
         /// <summary>
         /// Creates a new <see cref="DataService"/> whilst also bootstrapping the data dir.
         /// This is automatically invoked by the functions runtime, do not manually call.
         /// </summary>
         public DataService() {
+            // First see if we are running on Azure
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_DEPLOYMENT_ID"))) {
+                // This is blank, its local
+                DataDir = "bcaf_data";
+            } else {
+                // This isnt blank, its Azure
+                string? rootpath = Environment.GetEnvironmentVariable("HOME");
+                if (string.IsNullOrWhiteSpace(rootpath)) {
+                    throw new Exception("'HOME' env variable is blank");
+                }
+
+                // And assign
+                DataDir = Path.Combine(rootpath, "bcaf_data");
+            }
+
+            // Setup the rest of the dirs
+            DatastoreFile = Path.Combine(DataDir, "versions.json");
+            HooksFile = Path.Combine(DataDir, "hooks.toml");
+
             // Create our data dir if it doesnt exist
             if (!Directory.Exists(DataDir)) {
                 Directory.CreateDirectory(DataDir);
