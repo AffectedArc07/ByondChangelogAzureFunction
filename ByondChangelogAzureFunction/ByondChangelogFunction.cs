@@ -7,10 +7,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 
-namespace ByondChangelogAzureFunction
-{
-    public class ByondChangelogFunction
-    {
+namespace ByondChangelogAzureFunction {
+    public class ByondChangelogFunction {
         /// <summary>
         /// The <see cref="ILogger"/> for the <see cref="ByondChangelogFunction"/>.
         /// </summary>
@@ -32,8 +30,7 @@ namespace ByondChangelogAzureFunction
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/> for the <see cref="ByondChangelogFunction"/>.</param>
         /// <param name="dataService">The <see cref="IDataService"/> for the <see cref="ByondChangelogFunction"/>.</param>
-        public ByondChangelogFunction(ILogger<ByondChangelogFunction> logger, IDataService dataService)
-        {
+        public ByondChangelogFunction(ILogger<ByondChangelogFunction> logger, IDataService dataService) {
             // Assign what we pass through.
             _logger = logger;
             _dataService = dataService;
@@ -52,11 +49,15 @@ namespace ByondChangelogAzureFunction
         /// Runs every hour.
         /// </summary>
         [Function("CheckByondVersions")]
-        public async Task Run([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo trigger)
-        {
+        public async Task Run([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo trigger) {
             _logger.LogInformation($"Invoked at {DateTime.Now}");
 
             HttpResponseMessage get_byond_ver_res = await _apiClient.GetAsync("https://secure.byond.com/download/version.txt");
+
+            if (!get_byond_ver_res.IsSuccessStatusCode) {
+                return; // Dont do anything if its not a success
+            }
+
             string byond_ver_txt = await get_byond_ver_res.Content.ReadAsStringAsync();
 
             List<string> byond_vers = byond_ver_txt.Trim().Split("\n").ToList();
@@ -207,13 +208,13 @@ namespace ByondChangelogAzureFunction
 
                     // Assign our current stuff
                     current_build = version_key;
-                    
+
                     // Add to the info map
                     info_map.Add(version_key, new());
                 }
 
                 // Now try extract version info
-                if(element.TagName.ToLower() == "p") {
+                if (element.TagName.ToLower() == "p") {
                     if (string.IsNullOrWhiteSpace(element.TextContent)) {
                         continue; // Skip to next element to account for blank paragraphs
                     }
@@ -319,7 +320,7 @@ namespace ByondChangelogAzureFunction
             }
 
             // And post
-            foreach(string hook_url in hooks_to_post_to) {
+            foreach (string hook_url in hooks_to_post_to) {
                 await _apiClient.PostAsync(hook_url, JsonContent.Create(webhookModel));
             }
         }
