@@ -43,6 +43,9 @@ namespace ByondChangelogAzureFunction {
 
             // Now create the client itself with our options above
             _apiClient = new(options);
+            _apiClient.DefaultRequestHeaders.UserAgent.Clear();
+            // Add a fake user agent so CF doesnt both us
+            _apiClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36");
         }
 
         /// <summary>
