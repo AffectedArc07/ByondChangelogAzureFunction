@@ -49,7 +49,7 @@ namespace ByondChangelogAzureFunction {
         /// Runs every hour.
         /// </summary>
         [Function("CheckByondVersions")]
-        public async Task Run([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo trigger) {
+        public async Task Run([TimerTrigger("0 0 * * * *")] TimerInfo trigger) {
             _logger.LogInformation($"Invoked at {DateTime.Now}");
 
             HttpResponseMessage get_byond_ver_res = await _apiClient.GetAsync("https://secure.byond.com/download/version.txt");
@@ -223,6 +223,9 @@ namespace ByondChangelogAzureFunction {
                         // Program header - begin the parsing hell - so much sanity checking
                         IElement? link_name_elem = element.QuerySelector("u");
                         if (link_name_elem == null) {
+                            if (element.TextContent.Contains("View All")) {
+                                continue; // We are at the end of the page - stop caring
+                            }
                             _logger.LogError($"[A1] Parsing error - URL: {cl_url}");
                             return null;
                         }
