@@ -46,19 +46,20 @@ namespace ByondChangelogAzureFunction {
             _apiClient = new(options);
             _apiClient.DefaultRequestHeaders.UserAgent.Clear();
             // Add a fake user agent so CF doesnt both us
-            _apiClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36");
+            _apiClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36");
         }
 
         /// <summary>
         /// Runs every hour.
         /// </summary>
         [Function("CheckByondVersions")]
-        public async Task Run([TimerTrigger("0 0 * * * *")] TimerInfo _) {
+        public async Task Run([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo _) {
             _logger.LogInformation($"Invoked at {DateTime.Now}");
 
             HttpResponseMessage get_byond_ver_res = await _apiClient.GetAsync("https://secure.byond.com/download/version.txt");
 
             if (!get_byond_ver_res.IsSuccessStatusCode) {
+                _logger.LogWarning($"Got a non-successful status code back - {get_byond_ver_res.StatusCode} / {((int)get_byond_ver_res.StatusCode)}");
                 return; // Dont do anything if its not a success
             }
 
