@@ -2,7 +2,7 @@
 
 ## About
 
-A dotnet 8 (LTS) Azure Function to handle BYOND version changelogs via Discord webhooks.
+A dotnet 10 (LTS) Azure Function to handle BYOND version changelogs via Discord webhooks.
 
 It works by checking the BYOND update file every hour, checking if an update has been pushed, then parsing the changelog into
 a discord webhook before sending to a configured list of webhooks.

@@ -23,7 +23,7 @@ namespace ByondChangelogAzureFunction.Models {
         /// The embeds on the webhook.
         /// </summary>
         [JsonPropertyName("embeds")]
-        public List<EmbedHolder> Embeds { get; } = new();
+        public List<EmbedHolder> Embeds { get; } = [];
 
         internal class EmbedHolder {
             /// <summary>
@@ -55,7 +55,7 @@ namespace ByondChangelogAzureFunction.Models {
             /// The footer for the webhook.
             /// </summary>
             [JsonPropertyName("fields")]
-            public List<EmbedField> Fields { get; } = new();
+            public List<EmbedField> Fields { get; } = [];
 
 
             /// <summary>
@@ -74,28 +74,23 @@ namespace ByondChangelogAzureFunction.Models {
             /// <summary>
             /// Represents a field on a discord webhook.
             /// </summary>
-            internal class EmbedField {
+            /// <remarks>
+            /// Creates a new <see cref="EmbedField"/>.
+            /// </remarks>
+            /// <param name="fieldName">The <see cref="string"/> title for this embed field.</param>
+            /// <param name="fieldValue">The <see cref="string"/> content for this embed field.</param>
+            internal class EmbedField(string fieldName, string fieldValue) {
                 /// <summary>
                 /// The name of the field.
                 /// </summary>
                 [JsonPropertyName("name")]
-                public string FieldName { get; }
+                public string FieldName { get; } = fieldName;
 
                 /// <summary>
                 /// The content of the field.
                 /// </summary>
                 [JsonPropertyName("value")]
-                public string FieldValue { get; }
-
-                /// <summary>
-                /// Creates a new <see cref="EmbedField"/>.
-                /// </summary>
-                /// <param name="fieldName">The <see cref="string"/> title for this embed field.</param>
-                /// <param name="fieldValue">The <see cref="string"/> content for this embed field.</param>
-                public EmbedField(string fieldName, string fieldValue) {
-                    FieldName = fieldName;
-                    FieldValue = fieldValue;
-                }
+                public string FieldValue { get; } = fieldValue;
             }
 
 

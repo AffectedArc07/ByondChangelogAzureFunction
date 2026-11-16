@@ -15,7 +15,7 @@
         /// <summary>
         /// The list of application entries for this CL entry.
         /// </summary>
-        public List<ApplicationChangelogHolder> ApplicationEntries { get; } = new();
+        public List<ApplicationChangelogHolder> ApplicationEntries { get; } = [];
 
         /// <summary>
         /// The application holder class. Used for entries such as Dream Maker, Dream Seeker, etc.
@@ -29,7 +29,7 @@
             /// <summary>
             /// The CL entries for this application.
             /// </summary>
-            public List<string> Entries { get; } = new();
+            public List<string> Entries { get; } = [];
         }
     }
 }

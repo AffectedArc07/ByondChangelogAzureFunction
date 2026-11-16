@@ -38,8 +38,9 @@ namespace ByondChangelogAzureFunction {
             // Create our HTTP client options.
             // If we dont set this, we can run out of TCP states and requests dont go through.
             // Dont ask me how I know this.
-            HttpClientHandler options = new();
-            options.MaxConnectionsPerServer = 256;
+            HttpClientHandler options = new() {
+                MaxConnectionsPerServer = 256
+            };
 
             // Now create the client itself with our options above
             _apiClient = new(options);
@@ -52,7 +53,7 @@ namespace ByondChangelogAzureFunction {
         /// Runs every hour.
         /// </summary>
         [Function("CheckByondVersions")]
-        public async Task Run([TimerTrigger("0 0 * * * *")] TimerInfo trigger) {
+        public async Task Run([TimerTrigger("0 0 * * * *")] TimerInfo _) {
             _logger.LogInformation($"Invoked at {DateTime.Now}");
 
             HttpResponseMessage get_byond_ver_res = await _apiClient.GetAsync("https://secure.byond.com/download/version.txt");
@@ -63,14 +64,14 @@ namespace ByondChangelogAzureFunction {
 
             string byond_ver_txt = await get_byond_ver_res.Content.ReadAsStringAsync();
 
-            List<string> byond_vers = byond_ver_txt.Trim().Split("\n").ToList();
+            List<string> byond_vers = [.. byond_ver_txt.Trim().Split("\n")];
 
             if (byond_vers.Count == 0) {
                 _logger.LogError($"No BYOND versions found - body content: {byond_ver_txt}");
                 return;
             }
 
-            string? stable_version = null;
+            string? stable_version;
             string? beta_version = null;
 
             if (byond_vers.Count == 1) {
@@ -126,7 +127,7 @@ namespace ByondChangelogAzureFunction {
             }
 
             // Only write if theres been a change - no point in it
-            Dictionary<ByondReleaseChannel, string> versions_to_store = new();
+            Dictionary<ByondReleaseChannel, string> versions_to_store = [];
 
             if (!string.IsNullOrWhiteSpace(stable_version)) {
                 versions_to_store[ByondReleaseChannel.Stable] = stable_version;
@@ -180,16 +181,16 @@ namespace ByondChangelogAzureFunction {
             string byond_cl_raw = await (await _apiClient.GetAsync(cl_url)).Content.ReadAsStringAsync();
 
             // Start parsing that out
-            HtmlParser parser = new HtmlParser();
+            HtmlParser parser = new();
             IHtmlDocument document = parser.ParseDocument(byond_cl_raw);
 
             // Map of BYOND versions to their infos
-            Dictionary<string, List<ByondInfoHolder>> info_map = new();
+            Dictionary<string, List<ByondInfoHolder>> info_map = [];
 
             // Stuff for current iterations
             string current_build = string.Empty;
             ByondInfoHolder? current_info = null;
-            ByondInfoHolder.ApplicationChangelogHolder? current_application = null;
+            ByondInfoHolder.ApplicationChangelogHolder? current_application;
 
             // Now get the body content
             IElement? body_elem = document.QuerySelector("body");
@@ -199,13 +200,13 @@ namespace ByondChangelogAzureFunction {
                 return null;
             }
 
-            List<IElement> elements = new(body_elem.Children);
+            List<IElement> elements = [.. body_elem.Children];
             elements.RemoveAt(0); // Remove first thing - main header
             elements.RemoveAt(elements.Count - 1); // Remove last thing - footer
 
             // And begin the hellish parsing
             foreach (IElement element in elements) {
-                if (element.TagName.ToLower() == "h3") {
+                if (element.TagName.Equals("h3", StringComparison.CurrentCultureIgnoreCase)) {
                     // Get the version out
                     string version_key = element.TextContent.Split("Build ")[1].Trim();
 
@@ -213,11 +214,11 @@ namespace ByondChangelogAzureFunction {
                     current_build = version_key;
 
                     // Add to the info map
-                    info_map.Add(version_key, new());
+                    info_map.Add(version_key, []);
                 }
 
                 // Now try extract version info
-                if (element.TagName.ToLower() == "p") {
+                if (element.TagName.Equals("p", StringComparison.CurrentCultureIgnoreCase)) {
                     if (string.IsNullOrWhiteSpace(element.TextContent)) {
                         continue; // Skip to next element to account for blank paragraphs
                     }
@@ -251,15 +252,18 @@ namespace ByondChangelogAzureFunction {
                             return null;
                         }
 
+#pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
                         if (!info_map.ContainsKey(current_build)) {
                             _logger.LogInformation($"[A5] Couldnt find version {current_build} in info map - URL: {cl_url}");
                             return null;
                         }
+#pragma warning restore CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
 
                         // Save our info
-                        current_info = new();
-                        current_info.OuterTypeName = link_name_elem.TextContent;
-                        current_info.OuterTypeLink = link_href;
+                        current_info = new() {
+                            OuterTypeName = link_name_elem.TextContent,
+                            OuterTypeLink = link_href
+                        };
                         info_map[current_build].Add(current_info);
                     } else {
                         // Entry header - do shenanigans
@@ -276,14 +280,14 @@ namespace ByondChangelogAzureFunction {
                             return null;
                         }
 
-                        if (next_child.TagName.ToLower() != "ul") {
+                        if (!next_child.TagName.Equals("ul", StringComparison.CurrentCultureIgnoreCase)) {
                             _logger.LogError($"[A7] Child after {element.TextContent} is not <ul> URL: {cl_url}");
                             return null;
                         }
 
                         // Parse children for CL entries
                         foreach (IElement li_elem in next_child.Children) {
-                            if (li_elem.TagName.ToLower() == "li") {
+                            if (li_elem.TagName.Equals("li", StringComparison.CurrentCultureIgnoreCase)) {
                                 current_application.Entries.Add(li_elem.TextContent.Trim());
                             }
                         }
@@ -300,10 +304,12 @@ namespace ByondChangelogAzureFunction {
                 }
             }
 
+#pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
             if (!info_map.ContainsKey(versionTag)) {
                 _logger.LogInformation($"Couldnt find version {versionTag} in {cl_url}");
                 return null;
             }
+#pragma warning restore CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
 
             // Then send it back
             return new DiscordWebhook(versionTag, channel, info_map[versionTag]);

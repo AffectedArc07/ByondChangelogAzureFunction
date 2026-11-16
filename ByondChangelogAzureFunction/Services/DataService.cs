@@ -70,14 +70,10 @@ namespace ByondChangelogAzureFunction.Services
             }
 
             // Load it to the model
-            VersionsDatastoreModel? data_model = JsonSerializer.Deserialize<VersionsDatastoreModel>(file_data);
-
-            if (data_model == null) {
-                throw new Exception($"{DatastoreFile} is malformed - delete and recreate!");
-            }
+            VersionsDatastoreModel? data_model = JsonSerializer.Deserialize<VersionsDatastoreModel>(file_data) ?? throw new Exception($"{DatastoreFile} is malformed - delete and recreate!");
 
             // Read our data and assign the right versions
-            Dictionary<ByondReleaseChannel, string> version_dict = new();
+            Dictionary<ByondReleaseChannel, string> version_dict = [];
 
             if (!string.IsNullOrWhiteSpace(data_model.StableVersion)) {
                 version_dict[ByondReleaseChannel.Stable] = data_model.StableVersion;
@@ -100,7 +96,7 @@ namespace ByondChangelogAzureFunction.Services
                 HooksConfigModel blank_config = new();
                 // Add a blank URL to format the file properly
                 blank_config.HookUrls.Add("https://example.com");
-                string toml_data = Toml.FromModel(blank_config);
+                string toml_data = TomlSerializer.Serialize(blank_config);
                 await File.WriteAllTextAsync(HooksFile, toml_data);
             }
 
@@ -112,13 +108,9 @@ namespace ByondChangelogAzureFunction.Services
             }
 
             // Load it to the model
-            HooksConfigModel? data_model = Toml.ToModel<HooksConfigModel>(file_data);
+            HooksConfigModel? data_model = TomlSerializer.Deserialize<HooksConfigModel>(file_data);
 
-            if (data_model == null) {
-                throw new Exception($"{HooksFile} is malformed - delete and recreate!");
-            }
-
-            return data_model.HookUrls;
+            return data_model == null ? throw new Exception($"{HooksFile} is malformed - delete and recreate!") : data_model.HookUrls;
         }
 
 
@@ -136,6 +128,7 @@ namespace ByondChangelogAzureFunction.Services
             // Serialise to model
             VersionsDatastoreModel model = new();
 
+#pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
             if (existing_versions.ContainsKey(ByondReleaseChannel.Stable)) {
                 model.StableVersion = existing_versions[ByondReleaseChannel.Stable];
             }
@@ -143,6 +136,7 @@ namespace ByondChangelogAzureFunction.Services
             if (existing_versions.ContainsKey(ByondReleaseChannel.Beta)) {
                 model.BetaVersion = existing_versions[ByondReleaseChannel.Beta];
             }
+#pragma warning restore CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
 
             // Serialise to text
             string json_text = JsonSerializer.Serialize(model);

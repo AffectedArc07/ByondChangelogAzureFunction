@@ -15,15 +15,11 @@
     public static class ByondVersionEnumExtensions {
         public static string ToFormattedName(this ByondReleaseChannel channel) {
             // Switch what we have
-            switch(channel) {
-                case ByondReleaseChannel.Stable:
-                    return "Stable";
-                case ByondReleaseChannel.Beta:
-                    return "Beta";
-                default:
-                    // This should never happen
-                    throw new Exception($"Invalid ByondReleaseChannel value - {channel}");
-            }
+            return channel switch {
+                ByondReleaseChannel.Stable => "Stable",
+                ByondReleaseChannel.Beta => "Beta",
+                _ => throw new Exception($"Invalid ByondReleaseChannel value - {channel}"),// This should never happen
+            };
         }
     }
 }

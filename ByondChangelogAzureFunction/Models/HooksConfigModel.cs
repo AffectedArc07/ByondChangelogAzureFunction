@@ -11,6 +11,6 @@ namespace ByondChangelogAzureFunction.Models
         /// List of webhook URLs.
         /// </summary>
         [JsonPropertyName("hooks")] // Yes I know this is toml but it uses the json attributes.
-        public List<string> HookUrls { get; set; } = new();
+        public List<string> HookUrls { get; set; } = [];
     }
 }
