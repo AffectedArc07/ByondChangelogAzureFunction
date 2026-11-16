@@ -53,7 +53,7 @@ namespace ByondChangelogAzureFunction {
         /// Runs every hour.
         /// </summary>
         [Function("CheckByondVersions")]
-        public async Task Run([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo _) {
+        public async Task Run([TimerTrigger("0 0 * * * *")] TimerInfo _) {
             _logger.LogInformation($"Invoked at {DateTime.Now}");
 
             HttpResponseMessage get_byond_ver_res = await _apiClient.GetAsync("https://secure.byond.com/download/version.txt");
